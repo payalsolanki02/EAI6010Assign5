@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>CIFAR-10 Image Classifier</title>
+  <style>
+    body { font-family: Arial; text-align: center; margin-top: 50px; }
+    #result { margin-top: 20px; font-size: 1.5rem; }
+  </style>
+</head>
+<body>
+  <h1>Image Classifier (CIFAR-10)</h1>
+  <input type="file" id="imageInput" accept="image/*" />
+  <button onclick="predict()">Predict</button>
+  <div id="result"></div>
+
+  <script>
+    async function predict() {
+      const input = document.getElementById('imageInput');
+      const file = input.files[0];
+      if (!file) {
+        alert("Please select an image file.");
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append("file", file);
+
+      document.getElementById("result").innerText = "Predicting...";
+
+      try {
+        const response = await fetch("/predict/", {
+          method: "POST",
+          body: formData
+        });
+
+        const data = await response.json();
+        document.getElementById("result").innerText = `Prediction: ${data.prediction}`;
+      } catch (err) {
+        document.getElementById("result").innerText = "Error occurred.";
+        console.error(err);
+      }
+    }
+  </script>
+</body>
+</html>
