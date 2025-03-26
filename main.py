@@ -9,7 +9,6 @@ from model import MyCIFARModel
 
 app = FastAPI()
 
-# Serve static HTML
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 @app.get("/", response_class=HTMLResponse)
@@ -17,16 +16,13 @@ async def read_index():
     with open("static/index.html") as f:
         return HTMLResponse(content=f.read())
 
-# Load model
 model = MyCIFARModel()
 model.load_state_dict(torch.load("cifar10_model.pth", map_location=torch.device("cpu")))
 model.eval()
 
-# CIFAR-10 classes
 classes = ['airplane', 'automobile', 'bird', 'cat', 'deer',
            'dog', 'frog', 'horse', 'ship', 'truck']
 
-# Define transforms
 transform = transforms.Compose([
     transforms.ToTensor(),
     transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
