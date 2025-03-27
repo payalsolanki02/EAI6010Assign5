@@ -35,7 +35,8 @@
         });
 
         const data = await response.json();
-        document.getElementById("result").innerText = `Prediction: ${data.prediction}`;
+        document.getElementById("result").innerText = data.prediction ? 
+          `Prediction: ${data.prediction}` : `Error: ${data.error}`;
       } catch (err) {
         document.getElementById("result").innerText = "Error occurred.";
         console.error(err);

@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: cifar10-fullstack
+    name: cifar10-final
     env: python
     plan: free
     buildCommand: ""
