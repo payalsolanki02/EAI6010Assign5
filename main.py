@@ -1,3 +1,7 @@
+import os
+
+port = int(os.environ.get("PORT", 10000))  # fallback to 10000 (for local dev)
+
 from fastapi import FastAPI, File, UploadFile
 from fastapi.responses import JSONResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
