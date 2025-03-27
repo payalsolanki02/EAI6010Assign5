@@ -1,55 +1,35 @@
-from fastapi import FastAPI, File, UploadFile
-from fastapi.responses import JSONResponse, HTMLResponse
-from fastapi.staticfiles import StaticFiles
-from torchvision import transforms
-from PIL import Image
-import torch
-import io
-import os
-from model import MyCIFARModel
+import torch.nn as nn
+import torchvision.models as models
 
-print("🔥 FastAPI app is starting...")
+class MyCIFARModel(nn.Module):
+    def __init__(self):
+        super(MyCIFARModel, self).__init__()
+        model = models.resnet18(pretrained=True)
+        num_ftrs = model.fc.in_features
+        model.fc = nn.Linear(num_ftrs, 10)
 
-app = FastAPI()
+        # Flatten out to current class
+        self.conv1 = model.conv1
+        self.bn1 = model.bn1
+        self.relu = model.relu
+        self.maxpool = model.maxpool
+        self.layer1 = model.layer1
+        self.layer2 = model.layer2
+        self.layer3 = model.layer3
+        self.layer4 = model.layer4
+        self.avgpool = model.avgpool
+        self.fc = model.fc
 
-print("📁 Mounting static files...")
-app.mount("/static", StaticFiles(directory="static"), name="static")
-
-@app.get("/", response_class=HTMLResponse)
-async def read_index():
-    print("📄 Serving index.html")
-    with open("static/index.html") as f:
-        return HTMLResponse(content=f.read())
-
-print("🧠 Initializing model...")
-model = MyCIFARModel()
-try:
-    print("📦 Loading model weights...")
-    model.load_state_dict(torch.load("cifar10_model.pth", map_location=torch.device("cpu")))
-    model.eval()
-    print("✅ Model loaded successfully!")
-except Exception as e:
-    print(f"❌ Model loading failed: {e}")
-
-classes = ['airplane', 'automobile', 'bird', 'cat', 'deer',
-           'dog', 'frog', 'horse', 'ship', 'truck']
-
-transform = transforms.Compose([
-    transforms.ToTensor(),
-    transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
-])
-
-@app.post("/predict/")
-async def predict(file: UploadFile = File(...)):
-    try:
-        image_bytes = await file.read()
-        image = Image.open(io.BytesIO(image_bytes)).convert("RGB")
-        image = transform(image).unsqueeze(0)
-
-        with torch.no_grad():
-            outputs = model(image)
-            _, predicted = torch.max(outputs, 1)
-            label = classes[predicted.item()]
-        return JSONResponse(content={"prediction": label})
-    except Exception as e:
-        return JSONResponse(content={"error": str(e)}, status_code=500)
+    def forward(self, x):
+        x = self.conv1(x)
+        x = self.bn1(x)
+        x = self.relu(x)
+        x = self.maxpool(x)
+        x = self.layer1(x)
+        x = self.layer2(x)
+        x = self.layer3(x)
+        x = self.layer4(x)
+        x = self.avgpool(x)
+        x = x.view(x.size(0), -1)
+        x = self.fc(x)
+        return x
