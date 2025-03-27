@@ -2,8 +2,10 @@ from fastapi import FastAPI, File, UploadFile
 from fastapi.responses import JSONResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from torchvision import transforms
+from torchvision.models import resnet18, ResNet
 from PIL import Image
-import torch  # Make sure this is imported
+import torch
+import torch.serialization
 import io
 import os
 
@@ -22,7 +24,8 @@ async def read_index():
 
 print("Loading full model from file...")
 try:
-    model = torch.load("cifar10_model_full.pth", map_location=torch.device("cpu"))
+    with torch.serialization.safe_globals({"ResNet": ResNet}):
+        model = torch.load("cifar10_model_full.pth", map_location=torch.device("cpu"))
     model.eval()
     print("Model loaded successfully!")
 except Exception as e:
@@ -57,4 +60,3 @@ async def predict(file: UploadFile = File(...)):
         return JSONResponse(content={"prediction": label})
     except Exception as e:
         return JSONResponse(content={"error": str(e)}, status_code=500)
-
